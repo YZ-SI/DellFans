@@ -191,7 +191,7 @@ internal static class CoreTests
         finally { if (File.Exists(resourceLog)) File.Delete(resourceLog); if (File.Exists(resourceLog + ".previous")) File.Delete(resourceLog + ".previous"); }
         // The mode rules themselves are covered by tests/ModeTests.cs (run-modes.ps1); this keeps the persisted-store contract.
         FloorSettings floor = FloorSettings.Defaults(); floor.Validate();
-        Check(!floor.Enabled && floor.Mode == "auto" && !floor.MinimumRpm.HasValue, "First run would override BIOS control");
+        Check(floor.Enabled && floor.Mode == "balanced" && !floor.MinimumRpm.HasValue, "First run is balanced (control still waits for the capability check)");
         floor.Mode = "custom";
         Throws(delegate { floor.Validate(); }, "Custom mode enabled without explicit minimum RPM");
         floor.MinimumRpm = 2000; floor.Validate();
