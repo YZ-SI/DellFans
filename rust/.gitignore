@@ -1,0 +1,5 @@
+target/
+dist/
+target-test/
+dist-test/
+docs/*.png

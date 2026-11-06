@@ -1,0 +1,71 @@
+DellFans third-party notices
+============================
+
+DellFans itself is licensed under MIT OR Apache-2.0 (LICENSE-MIT, LICENSE-APACHE; copyright (c) 2026 YZ-SI
+and DellFans contributors). This file lists everything else that ships in the release archives. The full
+license texts are in the licenses\ folder next to this file.
+
+DellFans is not affiliated with Dell Inc.; Dell is a trademark of its owner. PawnIO, LibreHardwareMonitor and
+the other names below belong to their respective owners.
+
+1. IntelMSR.bin  (shipped next to the executables as a separate, unmodified file)
+-------------------------------------------------------------------------------
+A PawnIO module (compiled AMX script) that lets the signed PawnIO driver read Intel model-specific
+registers. DellFans loads it only after checking its SHA-256 and executes only the function
+ioctl_read_msr, only for MSRs 0x19C, 0x1B1 and 0x1A2 (thermal readouts).
+
+  License : GNU LGPL 2.1 or later - full text in licenses\PawnIO.Modules-LGPL-2.1.txt
+  Source  : https://github.com/namazso/PawnIO.Modules  (IntelMSR.p, release 0.2.2)
+  Commit  : e12a858d952461ee2e919897cacbff7f905fe370 (annotated tag 0.2.2, tag object 95a194e64ef7f044c8d441d857daabe21e44952f)
+  Release : https://github.com/namazso/PawnIO.Modules/releases/tag/0.2.2
+            asset https://github.com/namazso/PawnIO.Modules/releases/download/0.2.2/release_0_2_2.zip
+            (SHA-256 B9E05E52C07FD76B7F9DB3DA0F542B710D55511DC995D4F4CA08E9179B4C4032, 47526 bytes)
+  Verified: 2026-11-06. IntelMSR.bin inside that release asset has SHA-256
+            ED41A0D0DE082F4668A9CACCB9681EBBAD97A8ED3452C41918DDA1EB454B77A9 and is byte-identical to the file shipped here
+            (4068 bytes). The tag was resolved through the GitHub API to the commit above. Not verified: that the file
+            is reproducible from IntelMSR.p at that commit (the AMX compiler was not run).
+  License : the header of IntelMSR.p at that commit reads "GNU Lesser General Public License ... version 2.1 of the License,
+            or (at your option) any later version", Copyright (C) 2025 namazso; the release asset carries a COPYING
+            file with the LGPL 2.1 text.
+  Binary  : the copy in this repository came from LibreHardwareMonitor v0.9.6 (MPL-2.0 project; not part of DellFans)
+            and was then compared with the official release asset above.
+
+You may replace IntelMSR.bin with a build of the source above; DellFans will then refuse to load it
+until the pinned SHA-256 in src\Sensors.cs (PawnIoMsrSource.ModuleSha256) and build.ps1 is updated.
+2. Rust crates linked into DellFans.Tray.exe and DellFans.Watchdog.exe
+-------------------------------------------------------------------------------
+Taken from `cargo tree --edges normal` (rust\Cargo.lock) for the release profile. Both programs are
+statically linked, so the license terms below apply to the binaries. Where a crate offers a choice, DellFans
+uses the option marked "elected". The elected MIT texts are in licenses\rust-crates\; for Apache-2.0 alternatives
+see LICENSE-APACHE. DellFans' own crates (dfcore, dellfans-tray, dellfans-watchdog) are MIT OR Apache-2.0.
+
+  crate         version   SPDX                 elected  linked into         copyright / source
+  itoa          1.0.18    MIT OR Apache-2.0    MIT      tray, watchdog      David Tolnay - github.com/dtolnay/itoa
+  memchr        2.8.3     Unlicense OR MIT     MIT      tray, watchdog      Andrew Gallant, bluss - github.com/BurntSushi/memchr
+  serde_core    1.0.229   MIT OR Apache-2.0    MIT      tray, watchdog      Erick Tryzelaar, David Tolnay - github.com/serde-rs/serde
+  serde_json    1.0.154   MIT OR Apache-2.0    MIT      tray, watchdog      (Cargo.toml lists no authors; LICENSE-MIT names no holder) - github.com/serde-rs/json
+  windows-link  0.2.1     MIT OR Apache-2.0    MIT      tray, watchdog      Microsoft Corporation - github.com/microsoft/windows-rs
+  windows-sys   0.61.2    MIT OR Apache-2.0    MIT      tray, watchdog      Microsoft Corporation - github.com/microsoft/windows-rs
+  zmij          1.0.23    MIT                  MIT      tray, watchdog      David Tolnay - github.com/dtolnay/zmij
+
+The Rust standard library (MIT OR Apache-2.0, (c) The Rust Project Developers) is linked as well.
+Test-only crates (dellfans-testtools) and the `test-hooks` feature are never part of the release archives.
+Texts: licenses\rust-crates\<crate>-<version>-LICENSE-MIT.txt, plus licenses\rust-crates\memchr-2.8.3-UNLICENSE.txt.
+Some upstream MIT files carry no copyright line of their own; the authors above are those named in each
+crate's Cargo.toml (checked in the local cargo registry cache on 2026-11-06): itoa, zmij - David Tolnay; memchr - Andrew
+Gallant, bluss; serde_core - Erick Tryzelaar, David Tolnay; serde_json and windows-* list no authors in Cargo.toml (the windows-*
+LICENSE-MIT reads "Copyright (c) Microsoft Corporation.").
+
+3. PawnIO driver (NOT bundled)
+-------------------------------------------------------------------------------
+The kernel driver (PawnIO, (c) namazso) is NOT part of any DellFans archive and is not redistributed by
+DellFans. On first run DellFans asks for consent; only after the user agrees (UAC prompt) it downloads the
+pinned official PawnIO_setup.exe 2.2.0 from https://github.com/namazso/PawnIO.Setup/releases/tag/2.2.0,
+verifies its SHA-256 and that the Authenticode signer is CN=namazso.eu, and only then runs it with
+-install -silent. Uninstalling DellFans keeps PawnIO (other software may use it). PawnIO is licensed by its
+author under its own terms; read them on the PawnIO project pages before installing it.
+
+4. Not used
+-------------------------------------------------------------------------------
+LibreHardwareMonitor is not used or bundled (sensor reading is implemented in src\Sensors.cs); it is mentioned
+above only as the origin of the IntelMSR.bin file. No telemetry or network library is included.

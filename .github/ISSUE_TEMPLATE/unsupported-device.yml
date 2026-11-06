@@ -1,0 +1,62 @@
+name: Unsupported device / capability report
+description: DellFans says this computer is not supported. Share the capability report so it can be evaluated.
+title: "[device] <model> BIOS <version>"
+labels: ["unsupported-device"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        When the capability check fails, DellFans leaves the fan on BIOS automatic and saves a **capability report**,
+        a local JSON file under `%LocalAppData%\DellFans
+eports`. **It contains no serial number, service tag,
+        user name or network data** (please still skim it before posting). Nothing is uploaded unless you paste it here.
+
+        Do **not** run firmware-writing experiments to produce data for this issue.
+  - type: input
+    id: model
+    attributes:
+      label: Dell model
+      placeholder: "Dell Example"
+    validations:
+      required: true
+  - type: input
+    id: bios
+    attributes:
+      label: BIOS version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and build
+      placeholder: "Windows 10 22H2, build 19045.0000"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: DellFans version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Capability report JSON
+      description: Paste the full report produced by the DellFans capability probe (see docs/CAPABILITY.md).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What you see
+      description: What the window or tray shows, what you expected, and anything unusual about this machine (laptop, docking, third-party fan software).
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I checked the report and I am comfortable sharing it publicly.
+          required: true

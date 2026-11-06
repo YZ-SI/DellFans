@@ -1,0 +1,36 @@
+name: Bug report
+description: Something in DellFans does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems (pipe permissions, installer, PawnIO download) must **not** be reported here; see SECURITY.md.
+        If your fan stays loud or stuck after exiting, run `DellFans.Cli.exe --mode auto` as administrator first to return to BIOS control.
+  - type: input
+    id: version
+    attributes:
+      label: DellFans version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Dell model, BIOS and Windows build
+      placeholder: "Dell Example, BIOS 1.0.0, Windows 10 22H2 (19045)"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps, what you expected, what you saw. Include the active mode and whether the service was running.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional)
+      description: "Relevant lines from %ProgramData%\\DellFans or %LocalAppData%\\DellFans\\tray.log. Remove anything private."
+      render: text

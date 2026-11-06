@@ -1,0 +1,45 @@
+name: CI
+
+# Hardware tests NEVER run in CI: GitHub runners have no Dell fan interface, and the firmware-writing checks
+# (--test-fan, --capability-probe, the background controller itself) are never part of tests\run-all.ps1.
+# What runs here is the offline suite only: compile, unit and integration tests against fakes and temporary registry keys.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      # C# (csc.exe from .NET Framework 4.x, preinstalled) + Rust tray and watchdog.
+      - name: Build
+        shell: powershell
+        run: powershell -File build.ps1
+
+      - name: Offline tests
+        shell: powershell
+        run: powershell -File tests\run-all.ps1
+
+      # The portable release zip (programs, licenses, read-me); no services or registry are touched.
+      - name: Package
+        shell: powershell
+        run: powershell -File Package.ps1
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DellFans-dist
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error

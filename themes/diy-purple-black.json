@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "diy-purple-black",
+  "name": "DIY PURPLE-BLACK",
+  "base": "purple-black",
+  "fontFamily": "Segoe UI",
+  "cornerRadius": 20,
+  "shadowStrength": 30,
+  "colors": {
+    "background": "#15121C",
+    "surface": "#1F1A29",
+    "surfaceAlt": "#2B2437",
+    "ink": "#F5F0FC",
+    "muted": "#C3B6D3",
+    "accent": "#C7AAEF",
+    "accentInk": "#21152F",
+    "edge": "#51445F",
+    "warning": "#F2B3A1",
+    "input": "#251F31",
+    "selection": "#443454"
+  }
+}

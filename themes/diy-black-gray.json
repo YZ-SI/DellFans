@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "diy-black-gray",
+  "name": "DIY BLACK-GRAY",
+  "base": "black",
+  "fontFamily": "Segoe UI",
+  "cornerRadius": 20,
+  "shadowStrength": 30,
+  "colors": {
+    "background": "#111214",
+    "surface": "#1A1C1F",
+    "surfaceAlt": "#25282D",
+    "ink": "#F4F5F7",
+    "muted": "#B3BDC9",
+    "accent": "#A9C7D8",
+    "accentInk": "#10171D",
+    "edge": "#40464F",
+    "warning": "#F6B79A",
+    "input": "#1F2227",
+    "selection": "#344652"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "diy-white",
+  "name": "DIY WHITE",
+  "base": "white",
+  "fontFamily": "Segoe UI",
+  "cornerRadius": 20,
+  "shadowStrength": 30,
+  "colors": {
+    "background": "#F4F6F9",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#EBEFF4",
+    "ink": "#182230",
+    "muted": "#526176",
+    "accent": "#146B88",
+    "accentInk": "#FFFFFF",
+    "edge": "#D7DEE7",
+    "warning": "#9F3B18",
+    "input": "#FFFFFF",
+    "selection": "#DDE9EF"
+  }
+}
