@@ -179,6 +179,23 @@ internal static class CoreTests
         Check(!memoryBudget.RestoreAutomatic, "A sampling gap was counted as continuous overload");
         Check(FeedbackSchedule.DelayMilliseconds(3000) == 120 && FeedbackSchedule.DelayMilliseconds(5000) == 120, "Feedback frequency changed outside its verified budget");
         Check(FeedbackSchedule.DelayMilliseconds(1000) == 750 && FeedbackSchedule.DelayMilliseconds(4000) == 750 && FeedbackSchedule.DelayMilliseconds(5570) == 750, "Fixed endpoints still use rapid feedback");
+        // EC busy phase: frequency 1000 ticks per second, so one tick is one millisecond.
+        EcBusyPhase ec = new EcBusyPhase(1000);
+        Check(!ec.Known && ec.SafeNow(123) && ec.MillisecondsUntilSafe(123) == 0, "An unknown EC phase delayed a write");
+        ec.Observe(0, 31);
+        Check(!ec.Known, "A call no longer than the short busy window was taken as the long one");
+        ec.Observe(1000, 1090);
+        Check(ec.Known, "A 90 ms write did not calibrate the EC phase");
+        Check(ec.SafeNow(1090 + 150) && ec.SafeNow(1090 + 400) && ec.SafeNow(1090 + 550), "The quiet part of the EC cycle was refused");
+        Check(!ec.SafeNow(1090 + 100) && !ec.SafeNow(1090 + 660) && !ec.SafeNow(1090 + 950), "A write was allowed near an EC busy window");
+        Check(ec.SafeNow(1090 + 7 * 1000 + 400) && !ec.SafeNow(1090 + 7 * 1000 + 900), "The EC phase did not repeat every second");
+        Check(ec.SafeNow(1090 - 600) && !ec.SafeNow(1090 - 100), "The EC phase is wrong before its reference point");
+        int untilSafe = ec.MillisecondsUntilSafe(1090 + 900);
+        Check(untilSafe >= 250 && untilSafe <= 253 && ec.SafeNow(1090 + 900 + untilSafe), "Waiting did not lead to the quiet part of the EC cycle");
+        ec.Observe(5000, 5009);
+        Check(ec.SafeNow(1090 + 400) && !ec.SafeNow(1090 + 100), "A normal write changed the learned EC phase");
+        ec.Observe(9000, 9075);
+        Check(ec.SafeNow(9075 + 400) && !ec.SafeNow(9075 + 100), "A later long stall did not re-learn the EC phase");
         string resourceLog = Path.Combine(Path.GetTempPath(), "dellthermal-resource-test-" + Guid.NewGuid().ToString("N") + ".jsonl");
         try
         {

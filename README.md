@@ -1,4 +1,4 @@
-# DellFans 0.1.0
+# DellFans 0.2.0
 
 **简体中文** | [English](#english)
 
@@ -20,7 +20,7 @@ DellFans 是 Windows 上的 Dell 电脑风扇控制工具：用静音／平衡�
 
 ## 下载与使用
 
-1. 从 [Releases](https://github.com/YZ-SI/DellFans/releases) 下载 `DellFans-0.1.0-win-x64.zip`，解压到本地文件夹（需要 Windows 10 x64 与 .NET Framework 4.8）。
+1. 从 [Releases](https://github.com/YZ-SI/DellFans/releases) 下载 `DellFans-0.2.0-win-x64.zip`，解压到本地文件夹（需要 Windows 10 x64 与 .NET Framework 4.8）。
 2. 双击 `DellFans.exe`。第一次运行会请求管理员权限（UAC），用来启动后台控速程序；**不会安装任何服务，也不会复制文件到其他位置**。
 3. 第一次打开窗口时会检测这台电脑的 Dell 风扇接口（见下文）。通过后按**平衡模式**开始控速，可随时切换模式。
 4. 关闭窗口后，托盘和控速程序继续运行。托盘菜单的 **“退出 DellFans”** 会先把风扇交回 BIOS 自动，再退出全部程序。
@@ -81,7 +81,7 @@ CPU 温度的主来源是 PawnIO 驱动（`IntelMSR.bin` 模块随 DellFans 提�
 * **管道：** `\\.\pipe\DellFans.Control.v2` 仅限本机交互用户和管理员，拒绝所有远程（SMB）连接和网络登录令牌；界面、托盘和命令行只连接**同目录下以管理员身份运行的** `DellFans.Service.exe`，普通权限程序无法冒充；写入类请求逐字段校验。
 * **不留提权后门：** 解压目录普通用户可写，所以“登录后启动”不使用最高权限计划任务，而是每次登录请求一次 UAC。
 
-真机验证记录见 [docs/REAL-MACHINE-TESTS.md](docs/REAL-MACHINE-TESTS.md)，传感器准确性对比见 [docs/SENSOR-VERIFICATION.md](docs/SENSOR-VERIFICATION.md)。
+真机验证结果与传感器准确性对比见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
 
 ## 隐私
 
@@ -117,7 +117,7 @@ CPU 温度的主来源是 PawnIO 驱动（`IntelMSR.bin` 模块随 DellFans 提�
 
 ## 外观与翻译
 
-设置页可选白色、黑色、紫黑三套主题和简中／繁中／English（也可放入自定义主题和语言包，见 [docs/THEMES.md](docs/THEMES.md)、[docs/LOCALIZATION.md](docs/LOCALIZATION.md)）。
+设置页可选白色、黑色、紫黑三套主题和简中／繁中／English（也可放入自定义主题和语言包，见 [docs/CUSTOMIZATION.md](docs/CUSTOMIZATION.md)）。
 主界面与所有对话框使用同一套无边框圆角外观。外部文件只描述颜色、字体和文字，不会执行代码；解析失败只跳过该文件。
 
 ## 从源码构建
@@ -125,7 +125,7 @@ CPU 温度的主来源是 PawnIO 驱动（`IntelMSR.bin` 模块随 DellFans 提�
 ```powershell
 powershell -File build.ps1            # bin\：C# 三个程序（csc.exe）+ Rust 托盘和监护（cargo build --release）
 powershell -File tests\run-all.ps1    # 全部离线测试；退出码 0 为通过
-powershell -File Package.ps1          # dist\DellFans-0.1.0-win-x64.zip（绿色包）
+powershell -File Package.ps1          # dist\DellFans-0.2.0-win-x64.zip（绿色包）
 ```
 
 需要 Windows x64、.NET Framework 4.8、Rust stable（MSVC）。发布包说明见 [docs/RELEASE.md](docs/RELEASE.md)，贡献须知见 [CONTRIBUTING.md](CONTRIBUTING.md)，
@@ -156,7 +156,7 @@ The resident controller, watchdog and tray together use about 30 MiB of private 
 
 Screenshots are rendered offline (`DellFans.exe --render-preview`) with sample readings.
 
-**Download and use.** Get `DellFans-0.1.0-win-x64.zip` from [Releases](https://github.com/YZ-SI/DellFans/releases) and unzip it to a local folder (Windows 10 x64, .NET Framework 4.8).
+**Download and use.** Get `DellFans-0.2.0-win-x64.zip` from [Releases](https://github.com/YZ-SI/DellFans/releases) and unzip it to a local folder (Windows 10 x64, .NET Framework 4.8).
 Run `DellFans.exe`. The first run asks for administrator permission (UAC) to start the background controller; **no service is installed and nothing is copied elsewhere**.
 The first time the window opens it checks this computer's Dell fan interface (below); after a pass it controls the fan in **balanced** mode. Closing the window leaves the tray and the controller running;
 the tray's **Exit DellFans** hands the fan back to BIOS automatic and exits everything. *Start at sign-in* (settings page or tray menu) starts the tray at sign-in, which then asks once for administrator permission to start the controller.
@@ -196,7 +196,7 @@ Above the start temperature the target rises 50 RPM/s; below start − 3 °C for
 feedback faults or sustained resource overuse also hand back temporarily (saved mode unchanged). If the controller dies, the watchdog restores BIOS control. If the watchdog dies, the controller stops writing at once, hands back and resumes with a new watchdog.
 The control pipe accepts only local interactive users and administrators and rejects every remote (SMB) client and network logon; the window, tray and CLI talk only to an **elevated** `DellFans.Service.exe` **in their own folder**, which an unelevated program cannot impersonate.
 Because the folder is user-writable, sign-in start never uses an elevated scheduled task; it asks for UAC at each sign-in instead.
-Real-machine results: [docs/REAL-MACHINE-TESTS.md](docs/REAL-MACHINE-TESTS.md); sensor accuracy: [docs/SENSOR-VERIFICATION.md](docs/SENSOR-VERIFICATION.md).
+Real-machine results and sensor accuracy: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 **Privacy.** No telemetry, no uploads, no listening network ports. Check reports and logs stay on your machine; only what you paste into an issue leaves it. The only network access is the PawnIO download you agree to.
 
@@ -204,7 +204,7 @@ Real-machine results: [docs/REAL-MACHINE-TESTS.md](docs/REAL-MACHINE-TESTS.md); 
 the window, only while open, 31.3 MiB. The three resident processes average 0.05 % CPU (100 % = all logical processors).
 
 **Appearance and languages.** White, black and purple-black themes; Simplified Chinese, Traditional Chinese and English. Custom themes and language packs are data only
-(see [docs/THEMES.md](docs/THEMES.md), [docs/LOCALIZATION.md](docs/LOCALIZATION.md)). The main window and every dialog share one borderless, rounded look.
+(see [docs/CUSTOMIZATION.md](docs/CUSTOMIZATION.md)). The main window and every dialog share one borderless, rounded look.
 
 **Build from source.** Windows x64, .NET Framework 4.8 (`csc.exe`), Rust stable (MSVC): `powershell -File build.ps1`, `powershell -File tests\run-all.ps1`, `powershell -File Package.ps1` (the portable zip).
 Firmware-writing checks never run in the offline tests or CI. See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [docs/RELEASE.md](docs/RELEASE.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

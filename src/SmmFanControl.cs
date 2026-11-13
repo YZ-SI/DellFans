@@ -171,6 +171,35 @@ namespace DellFans
         public static bool IsTransientControllerError(string error) { return error == LoopInterruptedMessage || error == WatchdogExitedMessage; }
     }
 
+    // Measured on OptiPlex Micro 7010, BIOS 1.39.0 (docs/CONTROL_PROTOCOL.md): once per second the EC is busy for
+    // about 100 ms, and for about 20 ms again 0.66 s later. A fan-state write that lands in a busy window freezes every CPU core
+    // until the window ends (4-100 ms), which is heard as a chirp in playing audio. RPM reads are never delayed.
+    // The phase is learned from a write that stalled: it returns when the long window ends. Timestamps are Stopwatch ticks.
+    public sealed class EcBusyPhase
+    {
+        // Only the long window can hold a call this long (a normal call takes ~9 ms, the short window adds at most ~22 ms).
+        public const double CalibrateCallMs = 40;
+        // Writes go out 0.15-0.55 s after the long window ended: it starts again at ~0.90 and the short one sits at ~0.66.
+        // (0.10-0.55 was measured clean over 142 writes; a narrower range makes the fan overshoot its target further.)
+        public const double SafeFrom = 0.15, SafeTo = 0.55;
+        readonly long frequency;
+        long origin;
+        public bool Known { get; private set; }
+        public EcBusyPhase(long frequency) { this.frequency = frequency; }
+        double Position(long now) { return (((now - origin) % frequency + frequency) % frequency) / (double)frequency; }
+        // Call after every state-changing firmware call. A later long stall re-learns the phase, so drift corrects itself.
+        public void Observe(long start, long end)
+        { if ((end - start) * 1000.0 / frequency > CalibrateCallMs) { origin = end; Known = true; } }
+        // True while the phase is unknown: nothing is delayed until the first stall has shown where the window is.
+        public bool SafeNow(long now) { if (!Known) return true; double p = Position(now); return p >= SafeFrom && p <= SafeTo; }
+        public int MillisecondsUntilSafe(long now)
+        {
+            if (SafeNow(now)) return 0;
+            double wait = SafeFrom - Position(now); if (wait < 0) wait += 1;
+            return (int)Math.Ceiling(wait * 1000) + 2;
+        }
+    }
+
     public sealed class ManualFanStatus
     {
         public bool Active { get; set; }
@@ -471,6 +500,8 @@ namespace DellFans
         readonly string reportsDirectory;
         readonly IFanWatchdogStarter watchdogStarter;
         readonly bool backgroundSafety;
+        // Lives as long as the controller: the phase learned in one takeover is still valid in the next.
+        readonly EcBusyPhase ecPhase = new EcBusyPhase(Stopwatch.Frequency);
         CancellationTokenSource cancel;
         TaskThread worker;
         string watchdogPath, originalOverride;
@@ -605,7 +636,7 @@ namespace DellFans
 
         void Run()
         {
-            int previous = initialState;
+            int previous = initialState, deferred = 0;
             // Entry blocks the caller (and so new temperature samples) for the BIOS write, measured at 8-10 s. The loop's 8 s guard
             // therefore counts from its own start until the first new sample arrives; without one within 8 s it still hands back.
             long started = clockMs();
@@ -621,7 +652,7 @@ namespace DellFans
                     Process guard = watchdogProcess;
                     if (guard != null && guard.HasExited) throw new InvalidOperationException(FanSafetyPolicy.WatchdogExitedMessage);
                     lastIteration = iteration;
-                    int requested;
+                    int requested, deferMs = 0;
                     using (FanWatchdog.LockSession(watchdogPath))
                     {
                         FanWatchdog.RequireArmedSession(watchdogPath);
@@ -646,8 +677,17 @@ namespace DellFans
                         int state = RpmRange.ChooseState(requested, actual, previous);
                         if (state != previous)
                         {
-                            FanActuation.Apply(smm, state, previous, delegate { FanWatchdog.RequireArmedSession(watchdogPath); });
-                            previous = state;
+                            long now = Stopwatch.GetTimestamp();
+                            // A demand for full speed is never delayed. Any other change waits for the quiet part of the EC cycle,
+                            // at most 3 times in a row.
+                            if (requested != RpmRange.Maximum && deferred < 3 && !ecPhase.SafeNow(now))
+                            { deferMs = ecPhase.MillisecondsUntilSafe(now); deferred++; }
+                            else
+                            {
+                                FanActuation.Apply(smm, state, previous, delegate { FanWatchdog.RequireArmedSession(watchdogPath); });
+                                ecPhase.Observe(now, Stopwatch.GetTimestamp());
+                                previous = state; deferred = 0;
+                            }
                         }
                         lock (gate)
                         {
@@ -657,7 +697,7 @@ namespace DellFans
                         if (DateTime.UtcNow - lastHeartbeat > TimeSpan.FromSeconds(1))
                         { File.WriteAllText(watchdogPath + ".heartbeat", "alive"); lastHeartbeat = DateTime.UtcNow; }
                     }
-                    if (cancel.Token.WaitHandle.WaitOne(FeedbackSchedule.DelayMilliseconds(requested))) break;
+                    if (cancel.Token.WaitHandle.WaitOne(deferMs > 0 ? deferMs : FeedbackSchedule.DelayMilliseconds(requested))) break;
                 }
             }
             catch (Exception e)

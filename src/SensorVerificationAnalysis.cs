@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DellFans
 {
-    // docs/SENSOR-VERIFICATION.md: pure analysis of what `DellFans.Cli.exe --verify-sensors` collected. No clocks, no hardware, no files.
+    // docs/VERIFICATION.md: pure analysis of what `DellFans.Cli.exe --verify-sensors` collected. No clocks, no hardware, no files.
     public sealed class VerifyTick
     {
         public double T;                 // seconds since the run started (monotonic)

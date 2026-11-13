@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+### Fan control
+- Fan-state writes avoid the embedded controller's busy window. On the OptiPlex Micro 7010 (BIOS 1.39.0) the EC is busy for about 100 ms once per second, and a state write that lands there freezes every CPU core for up to 100 ms, which is heard as a chirp in playing audio. The controller learns the window from the first write that stalls and sends later state changes 0.15–0.55 s after it ends. Requests for full speed are never delayed. One stall shortly after the controller starts cannot be avoided. Mode speeds are unchanged.
+
+### Docs
+- Reference pages merged (12 → 7 files in `docs/`).
+
 ## 0.1.0 — first release
 
 ### Programs

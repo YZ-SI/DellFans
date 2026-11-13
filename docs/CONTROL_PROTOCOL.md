@@ -32,7 +32,7 @@
 
 ## Dell SMM 接口
 
-实现位于 `src/SmmFanControl.cs`。不同 Dell 电脑的可用命令不能互相推定，见 [DELL_INTERFACE_COMPATIBILITY.md](DELL_INTERFACE_COMPATIBILITY.md)。
+实现位于 `src/SmmFanControl.cs`。不同 Dell 电脑的可用命令不能互相推定，见 [CAPABILITY.md](CAPABILITY.md#dell-接口兼容性与验证边界dell-interface-compatibility-and-validation-boundaries)。
 
 Windows 提供 `root\dcim\sysman\diagnostics:LegacyDiags.Execute`，活动端点为 `ACPI\PNP0C14\WMDG_0`，GUID 为 `{F1DDEE52-063C-4784-A11E-8A06684B9B01}`。四个寄存器分别以 4 字节、小端序传入 `EaxVal/EbxVal/EcxVal/EdxVal`，相应 Len 为 4。
 
@@ -58,6 +58,8 @@ EAX 原样返回命令或低 16 位为 `0xFFFF` 时视为拒绝。读取名义�
 - 1000–4000 RPM：禁用固件自动控制，在运行档位 1 / 2 之间反馈切换。
 - 4000–5570 RPM：低侧使用 `0x34A3` 后设置中档；高侧使用 `0x35A3`，让已开启全速覆盖的固件驱动最高转速。
 - 控制死区为目标上下 15 RPM；窗口“保持中”的判定为当前反馈与目标相差不超过 100 RPM，该文字不代表误差始终受限于 100 RPM。
+
+**写档位避开 EC 忙碌期（`EcBusyPhase`）。** OptiPlex Micro 7010、BIOS 1.39.0 实测：EC 每秒有一段约 100 ms 的忙碌期，约 0.66 s 后还有一段约 20 ms 的。写档位命令（`0x01A3`、`0x34A3`、`0x35A3`）落在忙碌期内时，所有 CPU 核心会停顿到忙碌期结束（4–100 ms），正在播放的声音会“吱”一下；读转速（`0x02A3`）不受影响，约 1.9 ms。相位从一次被拖长的写入学到：调用耗时超过 40 ms 时，它返回的时刻就是长忙碌期的结束点。之后需要换档时，只在该时刻之后 0.15–0.55 s（每秒重复）内发出写命令，否则等到下一个安全时段（最多连续推迟 3 次，约 1 s）。目标为全速（5570）时不推迟。相位未知时不推迟，所以每次控速程序启动后的第一次长停顿无法避免；之后再出现长停顿会重新学习相位。实测：不对齐时约 15% 的写入被拖长；学到相位后连续 101 次写入均约 1.9 ms。
 
 比例表示区间位置：`rpm = round(1000 + 4570 × percent / 100)`，不是 PWM 占空比。0% 保持最低运行转速，50%=3285 RPM，100%=5570 RPM。
 
